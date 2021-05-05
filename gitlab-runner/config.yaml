@@ -1,0 +1,77 @@
+# Copyright Erik Lönroth, <erik.lonroth@gmail.com>
+# License: Apache2
+#
+#
+# See: https://docs.gitlab.com/runner/configuration/advanced-configuration.html
+
+options:
+  gitlab-registration-token:
+    type: string
+    default: ""
+    description: "The registration token to use (Get it from you gitlab project)."
+
+  gitlab-server:
+    type: string
+    default: ""
+    description: "The gitlab server to use. E.g. https://gitlab.example.com"
+
+  check-interval:
+    type: int
+    default: 3
+    description: |
+      "Seconds a runner waits between checks for each executor. 
+      If set to 0 or lower, the default value is used (3)."
+
+  sentry-dsn:
+    type: boolean
+    default: true
+    description: |
+      "Enables tracking of all system level errors to Sentry."
+
+  concurrent:
+    type: int
+    default: 1
+    description: |
+       "Number of concurrent jobs for a runner. 
+       Limits how many jobs can run concurrently. 
+       The maximum number is all defined runners. 
+       0 does not mean unlimited."
+
+  log-level:
+     type: string
+     default: "error"
+     description: |
+       "Allowed values are debug, info, warn, error, fatal, panic"
+
+  log-format:
+     type: string
+     default: "runner"
+     description: |
+       "Specifies the log format. Options are runner, text, and json."
+
+  docker-image:
+    type: string
+    default: "docker:latest"
+    description: "Deployment only config. The docker image to use for docker runners. E.g. docker:latest"
+
+  executor:
+    type: string
+    default: "docker"
+    description: |
+      "Can be: docker or lxd. Determines if this runner 
+       uses a lxd or docker executor."
+
+  tag-list:
+    type: string
+    default: "juju"
+    description: "Deployment only config. Comma separated Tag list for this runner. E.g. juju,docker"
+
+  https_proxy:
+    type: string
+    default: ""
+    description: "A https proxy url E.g. https://proxy.example.com:8080/"
+
+  http_proxy:
+    type: string
+    default: ""
+    description: "A http proxy url E.g. http://proxy.example.com:8080/"

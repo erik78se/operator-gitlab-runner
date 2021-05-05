@@ -1,0 +1,4 @@
+### Deployed by Juju - dont edit manually.
+
+# Start with metrics server
+DAEMON_ARGS="run --working-directory /var/lib/gitlab-runner --config /etc/gitlab-runner/config.toml --service gitlab-runner --syslog --user gitlab-runner --metrics-server :9252"

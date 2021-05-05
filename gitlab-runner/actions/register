@@ -1,0 +1,26 @@
+#!/bin/bash
+# Register a runner with a token
+
+# API:
+# https://docs.gitlab.com/ee/api/runners.html#register-a-new-runner
+
+source lib/gitlab-runner.bash
+
+#curl --request POST "https://gitlab.example.com/api/v4/runners" \
+#     --form "token=${_token}" \
+#     --form "description=Deployed on $_hostname" \
+#     --form "tag_list=${_tag_list}" \
+
+
+if ! gitlab-runner verify -n "$(hostname --fqdn)"; then
+    if gitlab-runner-register; then
+	juju-log INFO "Ready (Registered OK)"
+    else
+	juju-log ERROR "Failed in registration of runner. Bailing out."
+	exit 1
+    fi
+else
+    juju-log INFO "This runner is already registered. No action taken."
+fi
+
+hooks/update-status

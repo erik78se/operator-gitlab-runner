@@ -1,0 +1,10 @@
+[x] configs
+[x] actions
+
+[x] install
+[x] config-changed
+[x] start
+[x] update-status
+[x] scrape-relation-joined
+stop
+upgrade-charm

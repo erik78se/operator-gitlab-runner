@@ -1,0 +1,16 @@
+[Unit]
+Description=GitLab Runner (Deployed by Juju)
+After=syslog.target network.target
+ConditionFileIsExecutable=/usr/bin/gitlab-runner
+
+[Service]
+StartLimitInterval=5
+StartLimitBurst=10
+ExecStart=/usr/bin/gitlab-runner "run" "--working-directory" "/home/gitlab-runner" "--config" "/etc/gitlab-runner/config.toml" "--service" "gitlab-runner" "--user" "gitlab-runner" "--listen-address" ":9252"
+
+
+Restart=always
+RestartSec=120
+
+[Install]
+WantedBy=multi-user.target

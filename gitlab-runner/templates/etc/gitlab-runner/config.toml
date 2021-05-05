@@ -1,0 +1,10 @@
+# Template for global config.toml
+
+concurrent = $concurrent
+check_interval = $checkinterval
+sentry_dsn = \"$sentrydsn\"
+log_level = \"$loglevel\"
+log_format = \"$logformat\"
+
+[session_server]
+  session_timeout = 1800

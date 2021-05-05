@@ -1,0 +1,9 @@
+#!/bin/bash
+# Unregiser specific runner
+
+source lib/gitlab-runner.bash
+
+if gitlab-runner unregister -n "$(hostname --fqdn)"; then
+    sudo gitlab-runner restart
+    status-set waiting "Unregistered. Manual registration possible."
+fi

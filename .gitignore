@@ -1,0 +1,8 @@
+.idea/
+gitlab-runner/build/
+gitlab-runner.charm
+*.pyc
+*~
+*build*
+.tox/
+/gitlab-runner/venv/
