@@ -29,7 +29,10 @@ def install_docker_executor():
 
 def get_gitlab_runner_version():
     cmd = "gitlab-runner --version"
-    r = subprocess.run(cmd.split(), capture_output=True, universal_newlines=True)
+    r = subprocess.run(cmd.split(),
+                       stdout=subprocess.PIPE,
+                       stderr=subprocess.STDOUT,
+                       universal_newlines=True)
     return re.search('Version:(.*)', r.stdout).group(1).lstrip()
 
 

@@ -48,7 +48,7 @@ class GitlabRunnerCharm(CharmBase):
         self.framework.observe(self.on.config_changed, self._on_config_changed)
 
         # Actions
-        self.framework.observe(self.on.fortune_action, self._on_fortune_action)
+        # self.framework.observe(self.on.fortune_action, self._on_fortune_action)
 
         # Charm persistent memory
         self._stored.set_default(executor=None,
@@ -61,7 +61,7 @@ class GitlabRunnerCharm(CharmBase):
             self.on.config_changed: self._on_config_changed,
             self.on.start: self._on_start,
             self.on.update_status: self._on_update_status,
-            self.on.scrape_relation_joined: self._on_scrape_relation_joined,
+        #    self.on.scrape_relation_joined: self._on_scrape_relation_joined,
         }
 
         # Actions
@@ -99,7 +99,11 @@ class GitlabRunnerCharm(CharmBase):
         install_cmd = 'sudo -E apt-get -y install gitlab-runner'
         gl_env = os.environ.copy()
         gl_env['GITLAB_RUNNER_DISABLE_SKEL'] = 'true'
-        subprocess.Popen(install_cmd, env=gl_env)
+        ps = subprocess.Popen(install_cmd,shell=True,
+                         stdout=subprocess.PIPE,
+                         stderr=subprocess.STDOUT,
+                         universal_newlines=True,
+                         env=gl_env)
         output = ps.communicate()[0]
         logger.debug(output)
 
@@ -160,7 +164,18 @@ class GitlabRunnerCharm(CharmBase):
         hostname_fqdn = socket.getfqdn()
         subprocess.run(['gitlab-runner', 'unregister', '-n', hostname_fqdn, '--all-runners'])
 
+    def _on_list_runners_action(self,event):
+        # IMPLEMENT
+        pass
 
+    def _on_unregister_all_runners_action(self,event):
+        # IMPLEMENT
+        pass
+
+    def _on_verify_delete_action(self,event):
+        # IMPLEMENT
+        pass
+    
     def _on_register_action(self, event):
         """
         curl --request POST "https://gitlab.example.com/api/v4/runners" \
