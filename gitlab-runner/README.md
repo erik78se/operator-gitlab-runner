@@ -104,7 +104,7 @@ Consequently, charm config changes in the charm will not have an impact inside o
 
 # Actions
 
-See [actions.yaml](src/actions.yaml)
+See [actions.yaml](actions.yaml)
 
 # Contact Information
 Erik Lönroth: erik.lonroth@gmail.com
