@@ -156,18 +156,6 @@ class GitlabRunnerCharm(CharmBase):
         self._stored.registered = False
 
     def _on_register_action(self, event):
-        """
-        curl --request POST "https://gitlab.example.com/api/v4/runners" \
-        --form "token=${_token}" \
-        --form "description=Deployed on $_hostname" \
-        --form "tag_list=${_tag_list}" \
-        Learn more about actions at https://juju.is/docs/sdk/actions
-        """
-        # fail = event.params["fail"]
-        # if fail:
-        #     event.fail(fail)
-        # else:
-        #     event.set_results({"fortune": "A bug in the code is worth two in the documentation."})
         if not gitlab_runner.gitlab_runner_registered_already():
             if self.register():
                 self._stored.registered = True
