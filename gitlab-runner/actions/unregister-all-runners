@@ -1,4 +1,0 @@
-#!/bin/bash
-
-# Unregisters all locally defined runners from /etc/gitlab-runners/config.toml
-gitlab-runner unregister --all-runners

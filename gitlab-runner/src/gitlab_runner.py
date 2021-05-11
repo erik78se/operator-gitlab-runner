@@ -4,21 +4,24 @@
 #
 # Learn more at: https://juju.is/docs/sdk
 import logging
-import os, stat, re
+import stat
+import re
 import glob
 import shutil
 import socket
 import subprocess
 import toml
-
+from pathlib import Path
+import jinja2
 
 
 def install_lxd_executor():
     subprocess.run(['useradd', '-g', 'lxd', 'gitlab-runner'])
     subprocess.run(['mkdir', '-p', '/opt/lxd-executor'])
     for file in glob.glob('templates/lxd-executor/*.sh'):
-        shutil.copy2(file,'/opt/lxd-executor/')
-        os.chmod("/opt/lxd-executor/"+file, stat.S_IEXEC)
+        f = Path(file)
+        installed_file = Path(shutil.copy2(f, '/opt/lxd-executor/'))
+        installed_file.chmod(stat.S_IEXEC)
     subprocess.run(['lxd', 'init', '--auto'])
 
 
@@ -50,13 +53,42 @@ def gitlab_runner_registered_already():
     return cp.returncode == 0
 
 
-def register_docker(gitlabserver,gitlabregistrationtoken,taglist=[],concurrent=None,run_untagged=False,dockerimage=None,
-                     https_proxy=None,http_proxy=None):
+def register_docker(charm, https_proxy=None, http_proxy=None):
+
+    # Render #1 - global config
+    templates_path = Path('templates/etc/gitlab-runner/')
+    template = jinja2.Environment(
+        loader=jinja2.FileSystemLoader(templates_path)
+    ).get_template('config.toml')
+    target = Path('/etc/gitlab-runner/config.toml')
+    ctx = {'concurrent': charm.config['concurrent'],
+           'checkinterval': charm.config['check-interval'],
+           'sentrydsn': charm.config['sentry-dsn'],
+           'loglevel': charm.config['log-level'],
+           'logformat': charm.config['log-format']}
+    target.write_text(template.render(ctx))
+
+    # Render #2 - runner template.
+    # render-docker-runner-template
+    templates_path = Path('templates/runner-templates/')
+    template = jinja2.Environment(
+        loader=jinja2.FileSystemLoader(templates_path)
+    ).get_template('docker-1.template')
+    target = Path('/tmp/runner-template-config.toml')
+    ctx = {'dockerimage': charm.config['docker-image']}
+    target.write_text(template.render(ctx))
 
     hostname_fqdn = socket.getfqdn()
-
+    gitlabserver = charm.config['gitlab-server']
+    gitlabregistrationtoken = charm.config['gitlab-registration-token']
+    taglist = charm.config['tag-list']
+    concurrent = charm.config['concurrent']
+    dockerimage = charm.config['docker-image']
+    run_untagged = charm.config['run-untagged']
     proxyenv = ""
-    cmd = f"gitlab-runner register --non-interactive \
+
+    cmd = f"gitlab-runner register \
+    --non-interactive \
     --config /etc/gitlab-runner/config.toml \
     --template-config /tmp/runner-template-config.toml \
     --name {hostname_fqdn} \
@@ -74,13 +106,18 @@ def register_docker(gitlabserver,gitlabregistrationtoken,taglist=[],concurrent=N
     return cp.returncode == 0
 
 
-def register_lxd(gitlabserver,gitlabregistrationtoken,taglist=[],concurrent=None,run_untagged=False,
-                     https_proxy=None,http_proxy=None):
+def register_lxd(charm, https_proxy=None, http_proxy=None):
     hostname_fqdn = socket.getfqdn()
 
-    cmd = f"gitlab-runner register --non-interactive \
+    gitlabserver = charm.config['gitlab-server']
+    gitlabregistrationtoken = charm.config['gitlab-registration-token']
+    taglist = charm.config['tag-list']
+    concurrent = charm.config['concurrent']
+    run_untagged = charm.config['run-untagged']
+
+    cmd = f"gitlab-runner register \
+    --non-interactive \
     --config /etc/gitlab-runner/config.toml \
-    --template-config /tmp/runner-template-config.toml \
     --name {hostname_fqdn} \
     --url {gitlabserver} \
     --registration-token {gitlabregistrationtoken} \
@@ -97,6 +134,7 @@ def register_lxd(gitlabserver,gitlabregistrationtoken,taglist=[],concurrent=None
     logging.debug(cp.stdout)
     return cp.returncode == 0
 
+
 def get_token():
     """
     Returns: The 8 first chars of the token
@@ -106,4 +144,12 @@ def get_token():
             data = toml.load(f)
             return data['runners'][0]['token'][0:8]
         except(KeyError) as e:
-            return None
+            return str(e)
+
+
+def unregister():
+    hostname_fqdn = socket.getfqdn()
+    cmd = f"gitlab-runner unregister -n {hostname_fqdn} --all-runners"
+    cp = subprocess.run(cmd.split())
+    logging.debug(cp.stdout)
+    return cp.returncode == 0

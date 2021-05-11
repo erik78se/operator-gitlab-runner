@@ -66,6 +66,11 @@ options:
     default: "juju"
     description: "Deployment only config. Comma separated Tag list for this runner. E.g. juju,docker"
 
+  run-untagged:
+    type: boolean
+    default: false
+    description: "Makes the runner units digest untagged jobs or not."
+
   https_proxy:
     type: string
     default: ""

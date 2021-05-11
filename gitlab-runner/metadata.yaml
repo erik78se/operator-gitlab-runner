@@ -3,8 +3,8 @@ display-name: gitlab-runner
 summary: A gitlab-runner charm.
 maintainer: Erik Lönroth <erik.lonroth@gmail.com>
 description: |
-   Registers a gitlab-runner with a gitlab instance. Uses upstream gitlab-runner.
-   Supports docker &  lxd custom runners.
+   Registers gitlab-runner instances with a gitlab server instance. Uses upstream gitlab-runner.
+   Supports docker & lxd custom runners.
 tags:
   - ops
 series:
@@ -16,4 +16,4 @@ provides:
   scrape:
     interface: prometheus
 
-docs: https://github.com/erik78se/charm-gitlab-runner/blob/main/src/README.md
+docs: https://github.com/erik78se/operator-gitlab-runner/blob/main/src/README.md

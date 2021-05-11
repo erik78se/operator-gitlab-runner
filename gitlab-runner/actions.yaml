@@ -7,14 +7,3 @@ register:
 
 unregister:
   description: Run 'gitlab-runner unregister' for the unit.
-
-list-runners:
-  description: Runs the 'gitlab-runner list' command to reveal tokens etc.
-
-unregister-all-runners:
-  description: Runs 'gitlab-runner unregister --all-runners'
-
-verify-delete:
-  description: |
-    Runs 'gitlab-runner verify --delete'
-    Will also create a numbered backup of config.toml in /etc/gitlab-runner/

@@ -35,6 +35,7 @@ gitlab-runner:
   gitlab-server: "https://gitlab.example.com"
   gitlab-registration-token: tXwQuDAVmzxzzTtw2-ZL
   tag-list: "juju,docker,master"
+  run-untagged: true
 ```
 
 Then deploy with your config and some instance constraints.
@@ -62,6 +63,7 @@ gitlab-runner-one:
   gitlab-server: "https://gitlab.example.com"
   gitlab-registration-token: rXwQugergrzxzz32Fw3-44
   tag-list: "juju,docker,master"
+  run-untagged: true
 ```
 
 runner-config-two.yaml
@@ -70,6 +72,7 @@ gitlab-runner-two:
   gitlab-server: "https://gitlab.example.com"
   gitlab-registration-token: tXwQuDAVmzxzzTtw2-ZL
   tag-list: "juju,docker,daily"
+  run-untagged: true
 ```
 
 Deploy the same charm, using two differnt configs and different constraints.
@@ -98,11 +101,6 @@ Tags are added when a runner is registered (deployed) and can only be changed af
 
 Consequently, charm config changes in the charm will not have an impact inside of gitlab. Changes to the tag-list takes effect only for new units.
 
-Setting tag-list='' (empty) config for the charm automatically makes the runners pick up jobs with no tags.
-
-```
-juju config gitlab-runner tag-list=''
-```
 
 # Actions
 
@@ -114,4 +112,4 @@ Erik Lönroth: erik.lonroth@gmail.com
 https://eriklonroth.com
 
 # Upstream charm repo
-Repo at https://github.com/erik78se/charm-gitlab-runner
+Repo at https://github.com/erik78se/operator-gitlab-runner
