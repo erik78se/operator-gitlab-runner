@@ -8,12 +8,12 @@ options:
   gitlab-registration-token:
     type: string
     default: ""
-    description: "The registration token to use (Get it from you gitlab project)."
+    description: "MANDATORY: registration token. Get it from you gitlab project."
 
   gitlab-server:
     type: string
     default: ""
-    description: "The gitlab server to use. E.g. https://gitlab.example.com"
+    description: "MANDATORY: gitlab server to use. E.g. https://gitlab.example.com"
 
   check-interval:
     type: int
@@ -52,14 +52,16 @@ options:
   docker-image:
     type: string
     default: "docker:latest"
-    description: "Deployment only config. The docker image to use for docker runners. E.g. docker:latest"
+    description: |
+      "Deployment only config. The docker image to use for docker runners.
+      If the charm configured as executor=lxd, lxd will use this image. See. executor config"
 
   executor:
     type: string
     default: "docker"
     description: |
       "Can be: docker or lxd. Determines if this runner 
-       uses a lxd or docker executor."
+       uses a lxd or docker executor. See config docker-image."
 
   tag-list:
     type: string

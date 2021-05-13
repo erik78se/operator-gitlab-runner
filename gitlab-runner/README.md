@@ -101,11 +101,6 @@ Tags are added when a runner is registered (deployed) and can only be changed af
 
 Consequently, charm config changes in the charm will not have an impact inside of gitlab. Changes to the tag-list takes effect only for new units.
 
-
-# Actions
-
-See [actions.yaml](actions.yaml)
-
 # Contact Information
 Erik Lönroth: erik.lonroth@gmail.com
 

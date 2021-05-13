@@ -16,4 +16,4 @@ provides:
   scrape:
     interface: prometheus
 
-docs: https://github.com/erik78se/operator-gitlab-runner/blob/main/src/README.md
+docs: https://discourse.charmhub.io/t/gitlab-runner-docs-index/4581

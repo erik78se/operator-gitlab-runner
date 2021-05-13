@@ -1,9 +1,5 @@
 register:
   description: Registers a new runner instance.
-  params:
-    token:
-      type: string
-      description: Registers a new runner 'gitlab-runner register' with a token."
 
 unregister:
-  description: Run 'gitlab-runner unregister' for the unit.
+  description: Unregisters the runner instance.
