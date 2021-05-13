@@ -94,8 +94,6 @@ With any of the other examples, add in a prometheus instance:
 
 When ready, the prometheus instance will be available on http://prometheus-instance:9090/
 
-More example deploys can be found in the sources [examples](examples/) directory along with configuration yaml files used etc.
-
 # About runner tag-list
 Tags are added when a runner is registered (deployed) and can only be changed after through the gitlab server GUI or APIs unavailable to gitlab-runners.
 
