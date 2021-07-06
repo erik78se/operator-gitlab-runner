@@ -43,8 +43,6 @@ class GitlabRunnerCharm(CharmBase):
     def __init__(self, *args):
         super().__init__(*args)
         self.prometheus_provider = interface_prometheus.PrometheusProvider(self, 'scrape', socket.getfqdn(), port=9252)
-        # Hooks
-        self.framework.observe(self.on.config_changed, self._on_config_changed)
 
         # Charm persistent memory
         self._stored.set_default(executor=None,
