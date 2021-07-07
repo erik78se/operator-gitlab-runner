@@ -28,6 +28,12 @@ options:
     description: |
       "Enables tracking of all system level errors to Sentry."
 
+  locked:
+    type: boolean
+    default: true
+    description: |
+      "Locks the runner to the current project, defaults to true."
+
   concurrent:
     type: int
     default: 1

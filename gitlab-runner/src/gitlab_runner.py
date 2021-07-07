@@ -85,6 +85,7 @@ def register_docker(charm, https_proxy=None, http_proxy=None):
     concurrent = charm.config['concurrent']
     dockerimage = charm.config['docker-image']
     run_untagged = charm.config['run-untagged']
+    locked = charm.config['locked']
     proxyenv = ""
 
     cmd = f"gitlab-runner register \
@@ -97,6 +98,7 @@ def register_docker(charm, https_proxy=None, http_proxy=None):
     --tag-list {taglist} \
     --request-concurrency {concurrent} \
     --run-untagged={run_untagged} \
+    --locked={locked} \
     --executor docker \
     --docker-image {dockerimage} \
     {proxyenv}"
