@@ -25,6 +25,14 @@ The following configurations are mandatory:
 * **gitlab-registration-token** : Get this from your gitlab repo under "Settings -> CI/CD".
 * **gitlab-server** : The URL address to your gitlab server used to perform the gitlab-runner registration.
 
+## Group runners
+
+By setting the locked=false config, the runner registers as a non-locked runner. Requires the runner to be re-registered.
+
+    juju config gitlab-runner locked=false
+    juju run gitlab-runner/0 unregister
+    juju run gitlab-runner/0 register
+
 # Example deploy & scaling
 This example show a basic deploy scaling to N runners.
 
