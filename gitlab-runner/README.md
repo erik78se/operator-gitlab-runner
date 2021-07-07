@@ -25,6 +25,11 @@ The following configurations are mandatory:
 * **gitlab-registration-token** : Get this from your gitlab repo under "Settings -> CI/CD".
 * **gitlab-server** : The URL address to your gitlab server used to perform the gitlab-runner registration.
 
+## LXD runners
+Default lxd image will be set to ubuntu:18.04 if none has been set with the 'image' keyword in the .gitlab-ci.yml
+
+This can be changed also with the CUSTOM_ENV_CI_JOB_IMAGE variable in your gitlab project.
+
 ## Group runners
 
 By setting the locked=false config, the runner registers as a non-locked runner. Requires the runner to be re-registered.

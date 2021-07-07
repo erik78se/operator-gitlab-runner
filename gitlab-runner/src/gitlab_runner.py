@@ -110,13 +110,27 @@ def register_docker(charm, https_proxy=None, http_proxy=None):
 
 def register_lxd(charm, https_proxy=None, http_proxy=None):
     hostname_fqdn = socket.getfqdn()
-
     gitlabserver = charm.config['gitlab-server']
     gitlabregistrationtoken = charm.config['gitlab-registration-token']
     taglist = charm.config['tag-list']
     concurrent = charm.config['concurrent']
     run_untagged = charm.config['run-untagged']
+    locked = charm.config['locked']
 
+    # Render #1 - global config
+    templates_path = Path('templates/etc/gitlab-runner/')
+    template = jinja2.Environment(
+        loader=jinja2.FileSystemLoader(templates_path)
+    ).get_template('config.toml')
+    target = Path('/etc/gitlab-runner/config.toml')
+    ctx = {'concurrent': charm.config['concurrent'],
+           'checkinterval': charm.config['check-interval'],
+           'sentrydsn': charm.config['sentry-dsn'],
+           'loglevel': charm.config['log-level'],
+           'logformat': charm.config['log-format']}
+    target.write_text(template.render(ctx))
+
+    # Build register command
     cmd = f"gitlab-runner register \
     --non-interactive \
     --config /etc/gitlab-runner/config.toml \
@@ -126,6 +140,7 @@ def register_lxd(charm, https_proxy=None, http_proxy=None):
     --tag-list {taglist} \
     --request-concurrency {concurrent} \
     --run-untagged={run_untagged} \
+    --locked={locked} \
     --executor custom \
     --builds-dir /builds \
     --cache-dir /cache \

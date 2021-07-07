@@ -59,15 +59,14 @@ options:
     type: string
     default: "docker:latest"
     description: |
-      "Deployment only config. The docker image to use for docker runners.
-      If the charm configured as executor=lxd, lxd will use this image. See. executor config"
+      "Deployment only config. The docker image to use for docker runners."
 
   executor:
     type: string
     default: "docker"
     description: |
       "Can be: docker or lxd. Determines if this runner 
-       uses a lxd or docker executor. See config docker-image."
+       uses a lxd or docker executor."
 
   tag-list:
     type: string
