@@ -5,7 +5,7 @@ A gitlab-runner charm.
 The charm works like this:
 
 * Installs gitlab-runner upstream repos as described here:
-https://gitlab.com/gitlab-org/gitlab-runner/blob/master/docs/install/linux-repository.md
+https://gitlab.com/gitlab-org/gitlab-runner/blob/main/docs/install/linux-repository.md
 
 * Configures and registers a single docker or lxd runner using the configured gitlab-registration-token.
 
