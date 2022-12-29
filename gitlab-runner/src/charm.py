@@ -111,7 +111,7 @@ class GitlabRunnerCharm(CharmBase):
             gitlab_runner.install_docker_executor()
         else:
             logger.error(f"Unsupported executor {e} configured, bailing out.")
-            raise
+            self.unit.status = BlockedStatus("Docker exec tmpfs config incorrect")
 
         v = gitlab_runner.get_gitlab_runner_version()
         self._stored.executor = e
@@ -122,6 +122,10 @@ class GitlabRunnerCharm(CharmBase):
         if not gitlab_runner.check_mandatory_config_values(self):
             logger.error("Missing mandatory configs. Bailing.")
             self.unit.status = BlockedStatus("Missing mandatory config.")
+
+        if not gitlab_runner.check_docker_tmpfs_config(self):
+            logger.error("Configuration for Docker executor tmpfs config is incorrect. Bailing out!")
+            self.unit.status = BlockedStatus("Docker exec tmpfs config incorrect")
 
         if not gitlab_runner.gitlab_runner_registered_already():
             logger.info("Registering")
@@ -174,24 +178,25 @@ class GitlabRunnerCharm(CharmBase):
 
     def register(self):
         # Pdb self.framework.breakpoint("register")
-        logger.info(self._stored.executor)
+        logger.info(f"Register gitlab runner with executor: {self._stored.executor}")
         if self._stored.executor == 'docker':
             if gitlab_runner.register_docker(self, http_proxy=None, https_proxy=None):
                 self._stored.registered = True
                 logger.info("Ready (Registered)")
             else:
-                logger.error("Failed in registration of runner. Bailing out.")
-                raise
+                logger.error("Failed in registration of Docker runner. Bailing out.")
+                self._stored.registered = False
+
         elif self._stored.executor == 'lxd':
             if gitlab_runner.register_lxd(self, http_proxy=None, https_proxy=None):
                 self._stored.registered = True
                 logger.info("Ready (Registered)")
             else:
-                logger.error("Failed in registration of runner. Bailing out.")
-                raise
+                logger.error("Failed in registration of lxd runner. Bailing out.")
+                self._stored.registered = False
         else:
             logger.error("Unsupported runner class. Bailing out")
-            raise
+            self._stored.registered = False
 
         return self._stored.registered
 

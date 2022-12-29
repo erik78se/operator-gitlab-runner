@@ -4,10 +4,10 @@
 # Learn more about testing at: https://juju.is/docs/sdk/testing
 
 import unittest
-from unittest.mock import Mock
+# from unittest.mock import Mock
 
 from charm import GitlabRunnerCharm
-from ops.model import ActiveStatus
+# from ops.model import ActiveStatus
 from ops.testing import Harness
 
 

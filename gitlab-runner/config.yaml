@@ -65,17 +65,17 @@ options:
     type: string
     default: "docker"
     description: |
-      "Can be: docker or lxd. Determines if this runner 
-       uses a lxd or docker executor."
+      "MANDATORY: Can be: docker or lxd. Determines if this runner 
+       uses a lxd or docker executor. E.g. select [docker | lxd]"
 
   tag-list:
     type: string
-    default: "juju"
+    default: ""
     description: "Deployment only config. Comma separated Tag list for this runner. E.g. juju,docker"
 
   run-untagged:
     type: boolean
-    default: false
+    default: true
     description: "Makes the runner units digest untagged jobs or not."
 
   https_proxy:
@@ -87,3 +87,10 @@ options:
     type: string
     default: ""
     description: "A http proxy url E.g. http://proxy.example.com:8080/"
+
+  docker-tmpfs:
+    type: string
+    default: ""
+    description:  |
+      "Docker executor temporary file system configuration for tmpfs.
+       Path and config separated by a ':'. E.g. /scratch:rw,exec,size=1g"
