@@ -4,6 +4,7 @@
 #
 # Learn more at: https://juju.is/docs/sdk
 import logging
+import pathlib
 import stat
 import re
 import glob
@@ -62,60 +63,79 @@ def gitlab_runner_registered_already() -> bool:
     return cp.returncode == 0
 
 
-def register_docker(charm, https_proxy=None, http_proxy=None) -> bool:
+def _render_runner_templates(charm) -> bool:
+    def _render_templates(_template_path: pathlib.Path,
+                          _template_filename: str,
+                          _rendered_target_path: pathlib.Path,
+                          _keywords) -> bool:
+        try:
+            # Load template
+            template = jinja2.Environment(
+                loader=jinja2.FileSystemLoader(_template_path,),
+                undefined=jinja2.StrictUndefined
+            ).get_template(_template_filename)
+            # Redner template
+            rendered_template = template.render(_keywords)
+            rendered_target_path.write_text(rendered_template)
 
-    try:
-        # Render #1 - global config
-        templates_path = Path('templates/etc/gitlab-runner/')
-        template = jinja2.Environment(
-            loader=jinja2.FileSystemLoader(templates_path)
-        ).get_template('config.toml')
-        target = Path('/etc/gitlab-runner/config.toml')
-        ctx = {'concurrent': charm.config['concurrent'],
-               'checkinterval': charm.config['check-interval'],
-               'sentrydsn': charm.config['sentry-dsn'],
-               'loglevel': charm.config['log-level'],
-               'logformat': charm.config['log-format']}
-        target.write_text(template.render(ctx))
-    except jinja2.exceptions.TemplateSyntaxError as e:
-        logging.error('ERROR: Template config.toml could not be rendered due to syntax error\n'
-                      f'\tProblem: {e}')
-        return False
-    except jinja2.TemplateError as e:
-        logging.error('ERROR: Template config.toml could not be rendered\n'
-                      f'\tProblem: {e}')
+            return True
+        except jinja2.exceptions.TemplateNotFound:
+            logging.error(f"Template {_template_filename} could not be found.")
+            return False
+        except jinja2.exceptions.TemplateSyntaxError as e:
+            logging.error(f'Template {_template_filename} could not be rendered due to syntax error\n'
+                          f'\tProblem: {e}')
+            return False
+        except jinja2.exceptions.UndefinedError as e:
+            logging.error(f'Template {_template_filename} could not be rendered due to syntax error\n'
+                          f'\tProblem: {e}')
+            return False
+        except jinja2.TemplateError as e:
+            logging.error(f'Template {template_filename} could not be rendered\n'
+                          f'\tProblem: {e}')
+            return False
+
+    # Render #1 - global runner config
+    template_path = Path('templates/etc/gitlab-runner/')
+    template_filename = 'config.toml'
+    rendered_target_path = Path('/etc/gitlab-runner/config.toml')
+    keywords_to_render = {'concurrent': charm.config['concurrent'],
+                          'checkinterval': charm.config['check-interval'],
+                          'sentrydsn': charm.config['sentry-dsn'],
+                          'loglevel': charm.config['log-level'],
+                          'logformat': charm.config['log-format']}
+    if not _render_templates(template_path,
+                             template_filename,
+                             rendered_target_path,
+                             keywords_to_render):
         return False
 
-    try:
+    if charm.config['executor'] == 'docker':
         # Render #2 - runner template.
-        # render-docker-runner-template
-        templates_path = Path('templates/runner-templates/')
-        template = jinja2.Environment(
-            loader=jinja2.FileSystemLoader(templates_path,),
-            undefined=jinja2.StrictUndefined
-        ).get_template('docker-1.template')
-        target = Path('/tmp/runner-template-config.toml')
-        ctx = {'docker_image': charm.config['docker-image']}
+        template_path = Path('templates/runner-templates/')
+        template_filename = 'docker-1.template'
+        rendered_target_path = Path('/tmp/runner-template-config.toml')
+
+        keywords_to_render = {'docker_image': charm.config['docker-image']}
         # If tmpfs was defined for Docker executor, render required config.
         if charm.config['docker-tmpfs'] != '':
             docker_tmpfs_path, docker_tmpfs_config = charm.config['docker-tmpfs'].split(':')
-            ctx['docker_tmpfs_path'] = docker_tmpfs_path
-            ctx['docker_tmpfs_config'] = docker_tmpfs_config
-        target.write_text(template.render(ctx))
-    except jinja2.exceptions.TemplateNotFound:
-        logging.error("ERROR: Template docker-1.template could not be found.")
-        return False
-    except jinja2.exceptions.TemplateSyntaxError as e:
-        logging.error('ERROR: Template docker-1.template could not be rendered due to syntax error\n'
-                      f'\tProblem: {e}')
-        return False
-    except jinja2.exceptions.UndefinedError as e:
-        logging.error('ERROR: Template docker-1.template could not be rendered due to syntax error\n'
-                      f'\tProblem: {e}')
-        return False
-    except jinja2.TemplateError as e:
-        logging.error('ERROR: Template docker-1.template could not be rendered\n'
-                      f'\tProblem: {e}')
+            keywords_to_render['docker_tmpfs_path'] = docker_tmpfs_path
+            keywords_to_render['docker_tmpfs_config'] = docker_tmpfs_config
+
+        if not _render_templates(template_path,
+                                 template_filename,
+                                 rendered_target_path,
+                                 keywords_to_render):
+            return False
+
+    return True
+
+
+def register_docker(charm, https_proxy=None, http_proxy=None) -> bool:
+
+    # Render Gitlab runner templates
+    if not _render_runner_templates(charm):
         return False
 
     hostname_fqdn = socket.getfqdn()
@@ -123,8 +143,6 @@ def register_docker(charm, https_proxy=None, http_proxy=None) -> bool:
     gitlab_registration_token = charm.config['gitlab-registration-token']
     tag_list = charm.config['tag-list']
     concurrent = charm.config['concurrent']
-    # Defined in docker-1.template
-    # docker_image = charm.config['docker-image']
     run_untagged = charm.config['run-untagged']
     locked = charm.config['locked']
     proxyenv = ""
@@ -166,47 +184,58 @@ def register_docker(charm, https_proxy=None, http_proxy=None) -> bool:
 
 
 def register_lxd(charm, https_proxy=None, http_proxy=None) -> bool:
+
+    # Render Gitlab runner templates
+    if not _render_runner_templates(charm):
+        return False
+
     hostname_fqdn = socket.getfqdn()
-    gitlabserver = charm.config['gitlab-server']
-    gitlabregistrationtoken = charm.config['gitlab-registration-token']
-    taglist = charm.config['tag-list']
+    gitlab_server = charm.config['gitlab-server']
+    gitlab_registration_token = charm.config['gitlab-registration-token']
+    tag_list = charm.config['tag-list']
     concurrent = charm.config['concurrent']
     run_untagged = charm.config['run-untagged']
     locked = charm.config['locked']
+    proxyenv = ""
 
-    # Render #1 - global config
-    templates_path = Path('templates/etc/gitlab-runner/')
-    template = jinja2.Environment(
-        loader=jinja2.FileSystemLoader(templates_path)
-    ).get_template('config.toml')
-    target = Path('/etc/gitlab-runner/config.toml')
-    ctx = {'concurrent': charm.config['concurrent'],
-           'checkinterval': charm.config['check-interval'],
-           'sentrydsn': charm.config['sentry-dsn'],
-           'loglevel': charm.config['log-level'],
-           'logformat': charm.config['log-format']}
-    target.write_text(template.render(ctx))
+    cmd = ["gitlab-runner", "register",
+           "--non-interactive",
+           "--config", "/etc/gitlab-runner/config.toml",
+           "--name", f"{hostname_fqdn}",
+           "--url", f"{gitlab_server}",
+           "--registration-token", f"{gitlab_registration_token}",
+           "--request-concurrency", f"{concurrent}",
+           f"--run-untagged={run_untagged}",
+           f"--locked={locked}",
+           "--executor", "custom",
+           "--builds-dir", "/builds ",
+           "--cache-dir", "/cache",
+           "--custom-run-exec", "/opt/lxd-executor/run.sh",
+           "--custom-prepare-exec", "/opt/lxd-executor/prepare.sh ",
+           "--custom-cleanup-exec", "/opt/lxd-executor/cleanup.sh",
+           f"{proxyenv}"]
 
-    # Build register command
-    cmd = f"gitlab-runner register \
-    --non-interactive \
-    --config /etc/gitlab-runner/config.toml \
-    --name {hostname_fqdn} \
-    --url {gitlabserver} \
-    --registration-token {gitlabregistrationtoken} \
-    --tag-list {taglist} \
-    --request-concurrency {concurrent} \
-    --run-untagged={run_untagged} \
-    --locked={locked} \
-    --executor custom \
-    --builds-dir /builds \
-    --cache-dir /cache \
-    --custom-run-exec /opt/lxd-executor/run.sh \
-    --custom-prepare-exec /opt/lxd-executor/prepare.sh \
-    --custom-cleanup-exec /opt/lxd-executor/cleanup.sh"
-    cp = subprocess.run(cmd.split())
-    logging.debug(cp.stdout)
-    return cp.returncode == 0
+    if not run_untagged and tag_list != "":
+        cmd.extend(["--tag-list", "{tag-list}"])
+    if run_untagged and tag_list != "":
+        logging.warning('Conflicting configuration, run-untagged=True and tag_list are mutually exclusive. \
+        Skipping tag-list.')
+
+    logging.info("Executing registration call for gitlab-runner with lxd executor")
+    process = subprocess.Popen(cmd)
+    try:
+        std_out, std_err = process.communicate(timeout=30)
+        if std_out:
+            logging.info(std_out)
+        if std_err:
+            logging.error(std_err)
+    except subprocess.TimeoutExpired:
+        process.kill()
+        logging.error('Registration of gitlab-runner timed out and failed')
+        return False
+
+    logging.info(f'Registration of lxd executor finished with exit code: {process.returncode}')
+    return process.returncode == 0
 
 
 def get_token() -> str:
