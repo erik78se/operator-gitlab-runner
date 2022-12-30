@@ -75,7 +75,7 @@ options:
 
   run-untagged:
     type: boolean
-    default: true
+    default: false
     description: "Makes the runner units digest untagged jobs or not."
 
   https_proxy:
