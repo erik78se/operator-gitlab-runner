@@ -3,3 +3,6 @@ register:
 
 unregister:
   description: Unregisters the runner instance.
+
+upgrade:
+  description: Upgrade current system and runner to latest version
