@@ -7,9 +7,6 @@ description: |
    Supports docker & lxd custom runners.
 tags:
   - ops
-series:
-  - bionic
-  - focal
 subordinate: false
 
 provides:

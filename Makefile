@@ -11,7 +11,7 @@ clean: ## Remove .tox and build dirs
 
 ## Build nextcloud charm
 build: ## Build charm
-	@charmcraft build --from gitlab-runner
+	@charmcraft pack -p gitlab-runner
 
 # Display target comments in 'make help'
 help: 

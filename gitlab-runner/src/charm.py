@@ -60,7 +60,8 @@ class GitlabRunnerCharm(CharmBase):
         # Actions
         action_bindings = {
             self.on.register_action: self._on_register_action,
-            self.on.unregister_action: self._on_unregister_action
+            self.on.unregister_action: self._on_unregister_action,
+            self.on.upgrade_action: self._on_upgrade_action
         }
 
         # Observe events and actions
@@ -111,7 +112,7 @@ class GitlabRunnerCharm(CharmBase):
             gitlab_runner.install_docker_executor()
         else:
             logger.error(f"Unsupported executor {e} configured, bailing out.")
-            raise
+            self.unit.status = BlockedStatus("Docker exec tmpfs config incorrect")
 
         v = gitlab_runner.get_gitlab_runner_version()
         self._stored.executor = e
@@ -122,6 +123,10 @@ class GitlabRunnerCharm(CharmBase):
         if not gitlab_runner.check_mandatory_config_values(self):
             logger.error("Missing mandatory configs. Bailing.")
             self.unit.status = BlockedStatus("Missing mandatory config.")
+
+        if not gitlab_runner.check_docker_tmpfs_config(self):
+            logger.error("Configuration for Docker executor tmpfs config is incorrect. Bailing out!")
+            self.unit.status = BlockedStatus("Docker exec tmpfs config incorrect")
 
         if not gitlab_runner.gitlab_runner_registered_already():
             logger.info("Registering")
@@ -174,26 +179,103 @@ class GitlabRunnerCharm(CharmBase):
 
     def register(self):
         # Pdb self.framework.breakpoint("register")
-        logger.info(self._stored.executor)
+        logger.info(f"Register gitlab runner with executor: {self._stored.executor}")
         if self._stored.executor == 'docker':
             if gitlab_runner.register_docker(self, http_proxy=None, https_proxy=None):
                 self._stored.registered = True
                 logger.info("Ready (Registered)")
             else:
-                logger.error("Failed in registration of runner. Bailing out.")
-                raise
+                logger.error("Failed in registration of Docker runner. Bailing out.")
+                self._stored.registered = False
+
         elif self._stored.executor == 'lxd':
             if gitlab_runner.register_lxd(self, http_proxy=None, https_proxy=None):
                 self._stored.registered = True
                 logger.info("Ready (Registered)")
             else:
-                logger.error("Failed in registration of runner. Bailing out.")
-                raise
+                logger.error("Failed in registration of lxd runner. Bailing out.")
+                self._stored.registered = False
         else:
             logger.error("Unsupported runner class. Bailing out")
-            raise
+            self._stored.registered = False
 
         return self._stored.registered
+
+    def _on_upgrade_action(self, event):
+
+        logging.info("Executing upgrade of gitlab-runner with Docker executor")
+
+        # Unregister current runner
+        self._on_unregister_action(event)
+
+        # Perform upgrade of gitlab-runner
+        self.unit.status = WaitingStatus("Upgrading gitlab-runner")
+
+        # Get and set environment variables
+        gl_env = os.environ.copy()
+        gl_env['GITLAB_RUNNER_DISABLE_SKEL'] = 'true'
+
+        # Update gitlab-runner system
+        cmd = 'sudo -E apt-get -y update'
+        process = subprocess.Popen(cmd,
+                                   shell=True,
+                                   stdout=subprocess.PIPE,
+                                   stderr=subprocess.STDOUT,
+                                   universal_newlines=True,
+                                   env=gl_env)
+        try:
+            std_out, std_err = process.communicate(timeout=120)
+            if std_out:
+                logging.info(std_out)
+            if std_err:
+                logging.error(std_err)
+        except subprocess.TimeoutExpired:
+            process.kill()
+            logging.error('Upgrade of gitlab-runner timed out and failed')
+            return False
+
+        # Upgrade all packages
+        cmd = 'sudo -E apt-get -y upgrade'
+
+        process = subprocess.Popen(cmd,
+                                   shell=True,
+                                   stdout=subprocess.PIPE,
+                                   stderr=subprocess.STDOUT,
+                                   universal_newlines=True,
+                                   env=gl_env)
+        try:
+            std_out, std_err = process.communicate(timeout=600)
+            if std_out:
+                logging.info(std_out)
+            if std_err:
+                logging.error(std_err)
+        except subprocess.TimeoutExpired:
+            process.kill()
+            logging.error('Upgrade of gitlab-runner system timed out and failed')
+            return False
+
+        # Clean up system
+        cmd = 'sudo -E apt-get -y autoremove'
+
+        process = subprocess.Popen(cmd,
+                                   shell=True,
+                                   stdout=subprocess.PIPE,
+                                   stderr=subprocess.STDOUT,
+                                   universal_newlines=True,
+                                   env=gl_env)
+        try:
+            std_out, std_err = process.communicate(timeout=120)
+            if std_out:
+                logging.info(std_out)
+            if std_err:
+                logging.error(std_err)
+        except subprocess.TimeoutExpired:
+            process.kill()
+            logging.error('Clean up of gitlab-runner system timed out and failed')
+            return False
+
+        # Register new runner
+        self._on_register_action(event)
 
 
 if __name__ == "__main__":
