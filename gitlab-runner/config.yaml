@@ -61,6 +61,12 @@ options:
     description: |
       "Deployment only config. The docker image to use for docker runners."
 
+  docker-in-docker:
+    type: boolean
+    default: false
+    description: |
+      "Allow for running Docker in Docker using socks"
+
   executor:
     type: string
     default: "docker"
