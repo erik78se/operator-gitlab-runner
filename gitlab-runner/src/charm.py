@@ -148,7 +148,8 @@ class GitlabRunnerCharm(CharmBase):
 
     def _on_update_status(self, event):
         token = gitlab_runner.get_token()
-        if token:
+        is_ready = gitlab_runner.gitlab_runner_registered_already()
+        if token and is_ready:
             self.unit.status = ActiveStatus("Ready {executor}({token})".format(executor=self._stored.executor,
                                                                                token=token))
         else:
