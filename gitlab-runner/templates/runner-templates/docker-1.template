@@ -14,7 +14,7 @@
     disable_entrypoint_overwrite = false
     oom_kill_disable = false
     disable_cache = false
-    {% if docker-in-docker -%}
+    {% if docker_in_docker is defined and docker_in_docker -%}
     # Allow for Docker-in-Docker by bind-mount /var/run/docker.sock into the container so that docker is available in the context of that image.
     volumes = ["/var/run/docker.sock:/var/run/docker.sock", "/cache"]
     {% else %}
