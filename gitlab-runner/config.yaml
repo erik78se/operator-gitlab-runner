@@ -15,6 +15,12 @@ options:
     default: ""
     description: "MANDATORY: gitlab server to use. E.g. https://gitlab.example.com"
 
+  gitlab-runner-architecture:
+    type: string
+    default: "amd64"
+    description: |
+      "Architecture of the gitlab runner debian package to download"
+
   check-interval:
     type: int
     default: 3

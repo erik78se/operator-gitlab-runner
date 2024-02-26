@@ -76,9 +76,10 @@ class GitlabRunnerCharm(CharmBase):
         INSTALL PROCESS DOCUMENTED HERE
         https://gitlab.com/gitlab-org/gitlab-runner/blob/master/docs/install/linux-repository.md
         """
+        arch = self.config["gitlab-runner-architecture"]
 
         # Stage 1 - get upstream repo
-        cmd = 'curl -L https://packages.gitlab.com/install/repositories/runner/gitlab-runner/script.deb.sh | sudo bash'
+        cmd = f'curl -LJO "https://s3.dualstack.us-east-1.amazonaws.com/gitlab-runner-downloads/latest/deb/gitlab-runner_{arch}.deb"'
         ps = subprocess.Popen(cmd, shell=True,
                               stdout=subprocess.PIPE,
                               stderr=subprocess.STDOUT,
@@ -87,7 +88,7 @@ class GitlabRunnerCharm(CharmBase):
         logger.debug(output)
 
         # Stage 2 - install gitlab-runner
-        install_cmd = 'sudo -E apt-get -y install gitlab-runner'
+        install_cmd = f'sudo -E dpkg -i gitlab-runner_{arch}.deb'
         gl_env = os.environ.copy()
         gl_env['GITLAB_RUNNER_DISABLE_SKEL'] = 'true'
         ps = subprocess.Popen(install_cmd, shell=True,
