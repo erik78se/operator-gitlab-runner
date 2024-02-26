@@ -122,6 +122,9 @@ def _render_runner_templates(charm) -> bool:
             docker_tmpfs_path, docker_tmpfs_config = charm.config['docker-tmpfs'].split(':')
             keywords_to_render['docker_tmpfs_path'] = docker_tmpfs_path
             keywords_to_render['docker_tmpfs_config'] = docker_tmpfs_config
+        # If docker-in-docker is allowed
+        if isinstance(charm.config['docker-in-docker'], bool) and charm.config['docker-in-docker']:
+            keywords_to_render['docker_in_docker'] = True
 
         if not _render_templates(template_path,
                                  template_filename,
