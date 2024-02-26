@@ -211,7 +211,7 @@ def register_lxd(charm, https_proxy=None, http_proxy=None) -> bool:
            "--builds-dir", "/builds ",
            "--cache-dir", "/cache",
            "--custom-run-exec", "/opt/lxd-executor/run.sh",
-           "--custom-prepare-exec", "/opt/lxd-executor/prepare.sh ",
+           "--custom-prepare-exec", "/opt/lxd-executor/prepare.sh",
            "--custom-cleanup-exec", "/opt/lxd-executor/cleanup.sh",
            f"{proxyenv}"]
 
